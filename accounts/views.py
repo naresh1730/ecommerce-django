@@ -4,6 +4,8 @@ from django.contrib import messages, auth
 from .forms import RegistrationForm
 from .models import Account
 from django.http import HttpResponse
+from carts.views import cart_id
+from carts.models import Cart, CartItem
 
 # verification email
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -54,6 +56,22 @@ def login(request):
         password = request.POST['password']
         user = auth.authenticate(email=email, password=password)
         if user is not None:
+            try:
+                cart = Cart.objects.get(cart_id=cart_id(request))
+                print("inside try block")
+                print(cart)
+                is_cart_item_exists=CartItem.objects.filter(cart=cart).exists()
+                print(is_cart_item_exists)
+                if is_cart_item_exists:
+                    cart_item = CartItem.objects.filter(cart=cart)
+                    # getting the product variations by cart id
+                    for item in cart_item:
+                        item.user= user 
+                        print(item.user)
+                        item.save()
+            except:
+                print("inside except block")
+                pass
             auth.login(request, user)
             messages.success(request, 'you are now logged in')
             return redirect('dashboard')
@@ -90,7 +108,7 @@ def dashboard(request):
 def forgotPassword(request):
     if request.method == 'POST':
         email= request.POST['email']
-        if Account.objects.filter(email__exact=email).exists():
+        if Account.objects.filter(email=email).exists():
             user = Account.objects.get(email__exact=email)
 
             #foegot password mail
