@@ -4,6 +4,7 @@ from store.models import Product, Variation
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
+
 # Create your views here.
 
 def cart_id(request):
@@ -116,10 +117,15 @@ def add_cart(request, product_id):
         return redirect('cart')
 
 def remove_cart(request, product_id, cart_item_id):
-    cart = Cart.objects.get(cart_id = cart_id(request))
+    
     product = get_object_or_404(Product, id=product_id)
     try:
-        cart_item = CartItem.objects.get(product=product, cart=cart, id=cart_item_id)
+        if request.user.is_authenticated:
+            cart_item = CartItem.objects.get(product=product, user=request.user, id=cart_item_id)
+        
+        else:
+            cart = Cart.objects.get(cart_id = cart_id(request))
+            cart_item = CartItem.objects.get(product=product, cart=cart, id=cart_item_id)
         if cart_item.quantity >1:
             cart_item.quantity -= 1 
             cart_item.save()
@@ -130,9 +136,12 @@ def remove_cart(request, product_id, cart_item_id):
     return redirect('cart')
 
 def remove_cart_item(request, product_id, cart_item_id):
-    cart = Cart.objects.get(cart_id = cart_id(request))
     product = get_object_or_404(Product, id=product_id)
-    cart_item = CartItem.objects.get(product=product, cart=cart, id=cart_item_id)
+    if request.user.is_authenticated:
+            cart_item = CartItem.objects.get(product=product, user=request.user, id=cart_item_id)
+    else:
+        cart = Cart.objects.get(cart_id = cart_id(request))
+        cart_item = CartItem.objects.get(product=product, cart=cart, id=cart_item_id)
     cart_item.delete()
     return redirect('cart')
 
