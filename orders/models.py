@@ -18,7 +18,6 @@ class Order(models.Model):
         ('Accepted','Accepted'),
         ('Completed','Completed'),
         ('Cancelled','Cancelled'),
-
     )
 
     user = models.ForeignKey(Account, on_delete=models.SET_NULL, null=True)
